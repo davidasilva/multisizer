@@ -87,15 +87,53 @@ class coulterExperiment:
         
         self.dataDict = dataDict
         
+        #calculating with default
+        self.countCells()
     
     
-    def countCells(sortType='diameter',minDiameter = 9, maxDiameter = 60, minVolume = diameterToVolume(9), maxVolume = diameterToVolume(60)):
-        if sortType.lower() in ['diameter','d','diam']:
-            pass
-        elif sortType.lower() in ['volume','v','vol']:
-            pass
+    def countCells(self,boundType='diameter',minDiameter = 9.0, maxDiameter = 60.0, minVolume = diameterToVolume(9.0), maxVolume = diameterToVolume(60.0),dilution=100.0):
+        '''sets the upper and lower size limit for what is considered a cell, and calculates the cell concentration in k/mL in that sample (subject to a dilution factor based on how the sample is prepared -- default is 100, since we usually put 100uL of cells into 10mL of solution for measurement.
+        
+        
+        INPUTS:
+        -------
+        sortType : Determines whether to sort based on diameter or volume, and thereby whether to use minDiameter or minVolume for ounds
+        minDiameter: in microns (um)
+        maxDiameter: in microns (um)
+        minVolume: in cubic microns (fL)
+        max Volume: in cubic microns (fL). 
+        
+        CALCULATES:
+        -----------
+        count: how many cells, in k/mL
+        meanDiameter: in microns (um)
+        meanVolume: in cubic microns (fL)
+        medianDiameter: in microns (um)
+        medianVolume in cubic microns (fL)
+        
+        
+        RETURNS:
+        ----------
+        
+        
+        '''
+        if boundType.lower() in ['diameter','d','diam']:
+            self.lowerBound,self.upperBound = minDiameter,maxDiameter
+            self.boundType = 'diameter'
+        elif boundType.lower() in ['volume','v','vol']:
+            self.lowerBound,self.upperBound = minVolume,maxVolume
+            self.boundType = 'volume'
         else:
             return None
+        
+        self.cellData = self.pulsesDataFrame[(self.pulsesDataFrame[self.boundType] >= self.lowerBound) & (self.pulsesDataFrame[self.boundType] <= self.upperBound)] #subsetting that data that represents just cells
+        
+        #calculating various data
+        self.count = len(self.cellData) * dilution / 1000.0 #dividing by 1,000 to put it in k/mL
+        self.meanDiameter = np.mean(self.cellData.diameter)
+        self.meanVolume = np.mean(self.cellData.volume)
+        self.medianDiameter = np.median(self.cellData.diameter)
+        self.medianVolume = np.median(self.cellData.volume)
     
 
     
