@@ -138,7 +138,7 @@ class coulterExperiment(object):
         self.medianVolume = np.median(self.cellData.volume)
     
     def histogram(self,dataType='diameter',bins=50,**kwargs):
-        
+        '''Plots a histogram of the dataType column in pulsesDataFrame. kwargs get fed into plot; bins goes into np.histogram'''
         #constructing and plotting the histogram
         freq,bins = np.histogram(self.pulsesDataFrame[dataType],bins=bins)
         plt.fill_between(bins[0:-1],freq,alpha=0.4,**kwargs)
