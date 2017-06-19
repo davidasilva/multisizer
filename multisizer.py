@@ -199,25 +199,31 @@ class batchExperiment:
     def regExColumn(self,pattern,columnName):
         '''For each experiment in experimentList, creates a new column in summaryData based on the results of a regular expression search of pattern, names that column columnName, then updates the batch summaryData.'''
         
-        for experiment in self.experimentList:
+        for experiment in self:
             experiment.regExColumn(pattern,columnName)
             
         self.updateSummaryData()
         
     def histogramArray(self,subplotShape=None,**kwargs):
         '''Creates an array of subplots of histograms for each experiment.'''
-        nExps = len(self.experimentList)
+        nExps = len(self)
         
         if subplotShape is None:
             nRows = np.floor(np.sqrt(nExps))
             nColumns = nExps / nRows + 1
             
         fig = plt.figure(figsize=(12,8))
-        for i, experiment in enumerate(self.experimentList):
+        for i, experiment in enumerate(self):
             plt.subplot(nRows,nColumns,i+1)
             experiment.histogram(**kwargs)
             plt.title(experiment.fileTitle)
         
         plt.tight_layout()
+        
+    def __getitem__(self,key):
+        return self.experimentList[key]
+    
+    def __len__(self):
+        return len(self.experimentList)
             
         
