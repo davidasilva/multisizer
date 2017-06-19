@@ -91,7 +91,7 @@ class coulterExperiment(object):
         self.dataDict = dataDict
         
         #calculating with default
-        self.summaryData = pd.DataFrame(columns=('count','meanDiameter','meanVolume','medianDiameter','medianVolume'))
+        self.summaryData = pd.DataFrame(columns=('cellCount','meanDiameter','meanVolume','medianDiameter','medianVolume'))
         self.countCells()
     
     
@@ -133,13 +133,13 @@ class coulterExperiment(object):
         self.cellData = self.pulsesDataFrame[(self.pulsesDataFrame[self.boundType] >= self.lowerBound) & (self.pulsesDataFrame[self.boundType] <= self.upperBound)] #subsetting that data that represents just cells
         
         #calculating various data
-        self.count = len(self.cellData) * dilution / 1000.0 #dividing by 1,000 to put it in k/mL
+        self.cellCount = len(self.cellData) * dilution / 1000.0 #dividing by 1,000 to put it in k/mL
         self.meanDiameter = np.mean(self.cellData.diameter)
         self.meanVolume = np.mean(self.cellData.volume)
         self.medianDiameter = np.median(self.cellData.diameter)
         self.medianVolume = np.median(self.cellData.volume)
         
-        self.summaryData.loc[self.filename,['count','meanDiameter','meanVolume','medianDiameter','medianVolume']] = self.count, self.meanDiameter, self.meanVolume, self.medianDiameter, self.medianVolume
+        self.summaryData.loc[self.filename,['cellCount','meanDiameter','meanVolume','medianDiameter','medianVolume']] = self.cellCount, self.meanDiameter, self.meanVolume, self.medianDiameter, self.medianVolume
     
     def histogram(self,dataType='diameter',bins=50,**kwargs):
         '''Plots a histogram of the dataType column in pulsesDataFrame. kwargs get fed into plot; bins goes into np.histogram'''
@@ -225,6 +225,9 @@ class batchExperiment(object):
             plt.title(experiment.fileTitle)
         
         plt.tight_layout()
+    def countCells(self,**kwargs):
+        for exp in self:
+            exp.countCells(**kwargs)
         
     def __getitem__(self,key):
         return self.experimentList[key]
