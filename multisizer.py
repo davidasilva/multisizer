@@ -154,7 +154,7 @@ class coulterExperiment(object):
         #setting the xlims appropriately
         plt.xlim(bins[0],max(bins[-1],self.upperBound*1.05)); #lower bound is the lowest size detected; upper bound is either the biggest sized cell detected or the upperBound we've chosen for the cellular size range -- whichever is bigger
         
-    def regExColumn(self,pattern,columnName):
+    def regExColumn(self,pattern,columnName,functionToApply=None):
         '''Creates a new column in summaryData based on the results of a regular expression search of pattern, and names that column columnName.'''
         searchResult = re.search(pattern,self.filename)
         
@@ -163,7 +163,12 @@ class coulterExperiment(object):
             self.summaryData.loc[self.filename,columnName] = None;
         else:
             data = searchResult.group(1)
+            if functionToApply is not None:
+                data = functionToApply(data)
+          
             self.summaryData.loc[self.filename,columnName] = data;
+            
+        
     
     def __str__(self):
         return '< Coulter counter experiment from \'{0}\' >'.format(self.filename)
@@ -197,11 +202,11 @@ class batchExperiment(object):
         self.summaryData = pd.concat([experiment.summaryData for experiment in self.experimentList]);
         
         
-    def regExColumn(self,pattern,columnName):
+    def regExColumn(self,pattern,columnName,**kwargs):
         '''For each experiment in experimentList, creates a new column in summaryData based on the results of a regular expression search of pattern, names that column columnName, then updates the batch summaryData.'''
         
         for experiment in self:
-            experiment.regExColumn(pattern,columnName)
+            experiment.regExColumn(pattern,columnName,**kwargs)
             
         self.updateSummaryData()
         
