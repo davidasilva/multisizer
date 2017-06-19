@@ -152,7 +152,16 @@ class coulterExperiment(object):
         #setting the xlims appropriately
         plt.xlim(bins[0],max(bins[-1],self.upperBound*1.05)); #lower bound is the lowest size detected; upper bound is either the biggest sized cell detected or the upperBound we've chosen for the cellular size range -- whichever is bigger
         
-
+    def regExColumn(self,pattern,columnName):
+        '''Creates a new column in summaryData based on the results of a regular expression search of pattern, and names that column columnName.'''
+        searchResult = re.search(pattern,self.filename)
+        
+        if searchResult is None:
+            print 'No match found.'
+            self.summaryData.loc[self.filename,columnName] = None;
+        else:
+            data = searchResult.group(1)
+            self.summaryData.loc[self.filename,columnName] = data;
     
     def __str__(self):
         return '< Coulter counter experiment from \'{0}\' >'.format(self.filename)
@@ -178,4 +187,33 @@ class batchExperiment:
                     
                     
         #gather summaryData dataframes from all the individual files, concatenate into one
+        self.updateSummaryData()
+        
+        
+    def updateSummaryData(self):
         self.summaryData = pd.concat([experiment.summaryData for experiment in self.experimentList]);
+        
+        
+    def regExColumn(self,pattern,columnName):
+        '''For each experiment in experimentList, creates a new column in summaryData based on the results of a regular expression search of pattern, names that column columnName, then updates the batch summaryData.'''
+        
+        for experiment in self.experimentList:
+            experiment.regExColumn(pattern,columnName)
+            
+        self.updateSummaryData()
+        
+    def histogramArray(self,subplotShape=None,**kwargs):
+        '''Creates an array of subplots of histograms for each experiment.'''
+        nExps = len(self.experimentList)
+        
+        if subplotShape is None:
+            nRows = np.floor(np.sqrt(nExps))
+            nColumns = nExps / nRows + 1
+            
+        fig = plt.figure(figsize=(12,8))
+        for i, experiment in enumerate(self.experimentList):
+            plt.subplot(nRows,nColumns,i+1)
+            experiment.histogram(**kwargs)
+            plt.title(experiment.filename[-20:])
+            
+        
