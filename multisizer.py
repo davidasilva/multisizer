@@ -136,6 +136,8 @@ class coulterExperiment(object):
         self.meanVolume = np.mean(self.cellData.volume)
         self.medianDiameter = np.median(self.cellData.diameter)
         self.medianVolume = np.median(self.cellData.volume)
+        
+        self.summaryData.loc[self.filename,['count','meanDiameter','meanVolume','medianDiameter','medianVolume']] = self.count, self.meanDiameter, self.meanVolume, self.medianDiameter, self.medianVolume
     
     def histogram(self,dataType='diameter',bins=50,**kwargs):
         '''Plots a histogram of the dataType column in pulsesDataFrame. kwargs get fed into plot; bins goes into np.histogram'''
@@ -173,3 +175,7 @@ class batchExperiment:
                                           
             elif all([isinstance(source_object,coulterExperiment) for source_object in source]):#if every object is a coulterExperiment object
                    self.experimentList = list(source); #forcing into a list
+                    
+                    
+        #gather summaryData dataframes from all the individual files, concatenate into one
+        self.summaryData = pd.concat([experiment.summaryData for experiment in self.experimentList]);
