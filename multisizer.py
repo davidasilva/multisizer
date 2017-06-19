@@ -89,6 +89,7 @@ class coulterExperiment(object):
         self.dataDict = dataDict
         
         #calculating with default
+        self.summaryData = pd.DataFrame(columns=('count','meanDiameter','meanVolume','medianDiameter','medianVolume'))
         self.countCells()
     
     
