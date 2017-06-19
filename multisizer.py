@@ -226,6 +226,7 @@ class batchExperiment(object):
     
     def __len__(self):
         return len(self.experimentList)
-    
+    def __add__(self,other):
+        return batchExperiment(np.concatenate([self.experimentList,other.experimentList]))
             
         
