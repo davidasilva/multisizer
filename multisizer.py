@@ -2,9 +2,11 @@ import numpy as np
 from matplotlib import pyplot as plt
 import pandas as pd
 import re
+import os
 
 #defining constants
 countspervolt = 1/(4*298.02e-9)
+x=5
 
 def diameterToVolume(D):
     '''converts diameter to volume'''
@@ -14,10 +16,9 @@ def volumeToDiameter(V):
     return np.cbrt(V * 0.75 / np.pi) * 2;
 
 
-class coulterExperiment:
+class coulterExperiment(object):
     def __init__(self,filename):
         self.filename = filename
-        
         #open file, get data as a string
         with open(filename) as file:
             datastring = file.read()
@@ -91,7 +92,7 @@ class coulterExperiment:
         self.countCells()
     
     
-    def countCells(self,boundType='diameter',minDiameter = 9.0, maxDiameter = 60.0, minVolume = diameterToVolume(9.0), maxVolume = diameterToVolume(60.0),dilution=100.0):
+    def countCells(self, boundType='diameter',minDiameter = 9.0, maxDiameter = 25.0, minVolume = diameterToVolume(9.0), maxVolume = diameterToVolume(25.0),dilution=100.0):
         '''sets the upper and lower size limit for what is considered a cell, and calculates the cell concentration in k/mL in that sample (subject to a dilution factor based on how the sample is prepared -- default is 100, since we usually put 100uL of cells into 10mL of solution for measurement.
         
         
@@ -135,6 +136,19 @@ class coulterExperiment:
         self.medianDiameter = np.median(self.cellData.diameter)
         self.medianVolume = np.median(self.cellData.volume)
     
+    def histogram(self,dataType='diameter',bins=50,**kwargs):
+        
+        #constructing and plotting the histogram
+        freq,bins = np.histogram(self.pulsesDataFrame[dataType],bins=bins)
+        plt.fill_between(bins[0:-1],freq,alpha=0.4,**kwargs)
+        
+        #drawing vertical lines where the cell bounds are
+        plt.axvline(x=self.lowerBound,linestyle=':')
+        plt.axvline(x=self.upperBound,linestyle=':')
+        
+        #setting the xlims appropriately
+        plt.xlim(bins[0],max(bins[-1],self.upperBound*1.05)); #lower bound is the lowest size detected; upper bound is either the biggest sized cell detected or the upperBound we've chosen for the cellular size range -- whichever is bigger
+        
 
     
     def __str__(self):
@@ -143,3 +157,18 @@ class coulterExperiment:
         return self.__str__()
 
 
+class batchExperiment:
+    def __init__(self,source):
+        '''Creates an object for a collection of coulter counter files . Source can be either a list of coulterExperiment objects, a folder path, or a list of filenames. Can also use the __add__ method to combine coulterExperiment objects.'''
+        
+        #figure out what the source type is
+        if type(source) == str:#the source is a string for a folder path
+            filenameList = [os.path.join(source,filename) for filename in os.listdir(source) if filename[-4:].lower() == '.#m4'] #getting all the .#m4 files in the folder
+            self.experimentList = [coulterExperiment(source_object) for source_object in filenameList]
+        else:#must be some sort of iterable
+            assert hasattr(source,'__iter__'), 'Invalid source type. Source must be either a file path or a list (or similar).'
+            if all([object_type == str for object_type in map(type,source)]):#if every item in the source array is a string:
+                   self.experimentList = [coulterExperiment(filename) for filename in source]; #creating coulterExperiment from every file in list
+                                          
+            elif all([isinstance(source_object,coulterExperiment) for source_object in source]):#if every object is a coulterExperiment object
+                   self.experimentList = list(source); #forcing into a list
