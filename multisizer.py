@@ -6,7 +6,6 @@ import os
 
 #defining constants
 countspervolt = 1/(4*298.02e-9)
-x=5
 
 def diameterToVolume(D):
     '''converts diameter to volume'''
