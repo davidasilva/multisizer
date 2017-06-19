@@ -171,7 +171,7 @@ class coulterExperiment(object):
         return self.__str__()
 
 
-class batchExperiment:
+class batchExperiment(object):
     def __init__(self,source):
         '''Creates an object for a collection of coulter counter files . Source can be either a list of coulterExperiment objects, a folder path, or a list of filenames. Can also use the __add__ method to combine coulterExperiment objects.'''
         
