@@ -19,6 +19,8 @@ class coulterExperiment(object):
     def __init__(self,filename):
         self.filename = filename
         self.filenameWithoutPath = os.path.split(self.filename)[1]
+        self.fileTitle = self.filenameWithoutPath[0:-4]
+        
         #open file, get data as a string
         with open(filename) as file:
             datastring = file.read()
@@ -214,6 +216,8 @@ class batchExperiment:
         for i, experiment in enumerate(self.experimentList):
             plt.subplot(nRows,nColumns,i+1)
             experiment.histogram(**kwargs)
-            plt.title(experiment.filename[-20:])
+            plt.title(experiment.fileTitle)
+        
+        plt.tight_layout()
             
         
