@@ -189,7 +189,8 @@ class batchExperiment(object):
                     
                     
         #gather summaryData dataframes from all the individual files, concatenate into one
-        self.updateSummaryData()
+        if len(self) > 0:
+            self.updateSummaryData()
         
         
     def updateSummaryData(self):
@@ -225,5 +226,6 @@ class batchExperiment(object):
     
     def __len__(self):
         return len(self.experimentList)
+    
             
         
