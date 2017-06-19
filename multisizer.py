@@ -18,6 +18,7 @@ def volumeToDiameter(V):
 class coulterExperiment(object):
     def __init__(self,filename):
         self.filename = filename
+        self.filenameWithoutPath = os.path.split(self.filename)[1]
         #open file, get data as a string
         with open(filename) as file:
             datastring = file.read()
