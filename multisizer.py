@@ -181,6 +181,7 @@ class coulterExperiment(object):
 class batchExperiment(object):
     def __init__(self,source,**kwargs):
         '''Creates an object for a collection of coulter counter files . Source can be either a list of coulterExperiment objects, a folder path, or a list of filenames. Can also use the __add__ method to combine coulterExperiment objects.'''
+               
         
         #figure out what the source type is
         if type(source) == str:#the source is a string for a folder path
@@ -218,7 +219,7 @@ class batchExperiment(object):
         
         if subplotShape is None:
             nRows = np.floor(np.sqrt(nExps))
-            nColumns = nExps / nRows + 1
+            nColumns = nExps / nRows
             
         fig = plt.figure(figsize=(12,8))
         for i, experiment in enumerate(self):
