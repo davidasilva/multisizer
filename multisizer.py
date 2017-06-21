@@ -16,10 +16,12 @@ def volumeToDiameter(V):
 
 
 class coulterExperiment(object):
-    def __init__(self,filename):
+    def __init__(self,filename,dilution=100.0,**kwargs):
+        '''Initializes an experiment object from the filename (with path) -- reads in data from file into usuable format, creates relevant dictionaries and dataframes with the data, and applies countCells function to count the number and size of cells within a certain size range. kwargs get passed to countCells method.'''
         self.filename = filename
         self.filenameWithoutPath = os.path.split(self.filename)[1]
         self.fileTitle = self.filenameWithoutPath[0:-4]
+        self.dilution=dilution #setting this upfront, since there's no reason for it to change
         
         #open file, get data as a string
         with open(filename) as file:
@@ -92,10 +94,10 @@ class coulterExperiment(object):
         
         #calculating with default
         self.summaryData = pd.DataFrame(columns=('cellCount','meanDiameter','meanVolume','medianDiameter','medianVolume'))
-        self.countCells()
+        self.countCells(**kwargs)
     
     
-    def countCells(self, boundType='diameter',minDiameter = 9.0, maxDiameter = 25.0, minVolume = diameterToVolume(9.0), maxVolume = diameterToVolume(25.0),dilution=100.0):
+    def countCells(self, boundType='diameter',minDiameter = 9.0, maxDiameter = 25.0, minVolume = diameterToVolume(9.0), maxVolume = diameterToVolume(25.0),**kwargs):
         '''sets the upper and lower size limit for what is considered a cell, and calculates the cell concentration in k/mL in that sample (subject to a dilution factor based on how the sample is prepared -- default is 100, since we usually put 100uL of cells into 10mL of solution for measurement.
         
         
@@ -133,7 +135,7 @@ class coulterExperiment(object):
         self.cellData = self.pulsesDataFrame[(self.pulsesDataFrame[self.boundType] >= self.lowerBound) & (self.pulsesDataFrame[self.boundType] <= self.upperBound)] #subsetting that data that represents just cells
         
         #calculating various data
-        self.cellCount = len(self.cellData) * dilution / 1000.0 #dividing by 1,000 to put it in k/mL
+        self.cellCount = len(self.cellData) * self.dilution / 1000.0 #dividing by 1,000 to put it in k/mL
         self.meanDiameter = np.mean(self.cellData.diameter)
         self.meanVolume = np.mean(self.cellData.volume)
         self.medianDiameter = np.median(self.cellData.diameter)
@@ -177,17 +179,17 @@ class coulterExperiment(object):
 
 
 class batchExperiment(object):
-    def __init__(self,source):
+    def __init__(self,source,**kwargs):
         '''Creates an object for a collection of coulter counter files . Source can be either a list of coulterExperiment objects, a folder path, or a list of filenames. Can also use the __add__ method to combine coulterExperiment objects.'''
         
         #figure out what the source type is
         if type(source) == str:#the source is a string for a folder path
             filenameList = [os.path.join(source,filename) for filename in os.listdir(source) if filename[-4:].lower() == '.#m4'] #getting all the .#m4 files in the folder
-            self.experimentList = [coulterExperiment(source_object) for source_object in filenameList]
+            self.experimentList = [coulterExperiment(source_object,**kwargs) for source_object in filenameList]
         else:#must be some sort of iterable
             assert hasattr(source,'__iter__'), 'Invalid source type. Source must be either a file path or a list (or similar).'
             if all([object_type == str for object_type in map(type,source)]):#if every item in the source array is a string:
-                   self.experimentList = [coulterExperiment(filename) for filename in source]; #creating coulterExperiment from every file in list
+                   self.experimentList = [coulterExperiment(filename,**kwargse) for filename in source]; #creating coulterExperiment from every file in list
                                           
             elif all([isinstance(source_object,coulterExperiment) for source_object in source]):#if every object is a coulterExperiment object
                    self.experimentList = list(source); #forcing into a list
