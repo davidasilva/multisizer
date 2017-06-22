@@ -93,7 +93,7 @@ class coulterExperiment(object):
         self.dataDict = dataDict
         
         #calculating with default
-        self.summaryData = pd.DataFrame(columns=('cellCount','meanDiameter','meanVolume','medianDiameter','medianVolume'))
+        self.summaryData = pd.DataFrame(columns=('cellCount','meanDiameter','meanVolume','medianDiameter','medianVolume','totalCellVolume'))
         self.countCells(**kwargs)
     
     
@@ -140,8 +140,9 @@ class coulterExperiment(object):
         self.meanVolume = np.mean(self.cellData.volume)
         self.medianDiameter = np.median(self.cellData.diameter)
         self.medianVolume = np.median(self.cellData.volume)
+        self.totalCellVolume = sum(self.cellData.volume) * self.dilution / (1.0e9) #total volume of cells per mL, in microliters
         
-        self.summaryData.loc[self.filename,['cellCount','meanDiameter','meanVolume','medianDiameter','medianVolume']] = self.cellCount, self.meanDiameter, self.meanVolume, self.medianDiameter, self.medianVolume
+        self.summaryData.loc[self.filename,['cellCount','meanDiameter','meanVolume','medianDiameter','medianVolume','totalCellVolume']] = self.cellCount, self.meanDiameter, self.meanVolume, self.medianDiameter, self.medianVolume, self.totalCellVolume
     
     def histogram(self,dataType='diameter',bins=50,**kwargs):
         '''Plots a histogram of the dataType column in pulsesDataFrame. kwargs get fed into plot; bins goes into np.histogram'''
