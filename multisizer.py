@@ -3,6 +3,7 @@ from matplotlib import pyplot as plt
 import pandas as pd
 import re
 import os
+from datetime import datetime
 
 #defining constants
 countspervolt = 1/(4*298.02e-9)
@@ -92,8 +93,15 @@ class coulterExperiment(object):
         
         self.dataDict = dataDict
         
+        #extracting time data
+        self.datetimeString = re.search(' [0-9]*  (.*)',dataDict['Save0']['Time']).group(1)
+        self.datetimeObject = datetime.strptime(self.datetimeString,'%H:%M:%S  %d %b %Y')
+
+
+        
         #calculating with default
-        self.summaryData = pd.DataFrame(columns=('cellCount','meanDiameter','meanVolume','medianDiameter','medianVolume','totalCellVolume'))
+        self.summaryData = pd.DataFrame(columns=('datetime','cellCount','meanDiameter','meanVolume','medianDiameter','medianVolume','totalCellVolume'))
+        self.summaryData.loc[self.filename,'datetime'] = self.datetimeObject
         self.countCells(**kwargs)
     
     
