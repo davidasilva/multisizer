@@ -5,11 +5,17 @@ pmDict = {
     '-':False}
 
 def plusMinusToBool(pm):
+    '''converts +/- to boolean'''
     if pm not in ['+','-']: return None
     else: return pmDict[pm]
+    
+def getCellType(filename):
+    '''splits the filename by the delimiter '__', and takes the third entry -- in my convention, this is the cell type.'''S
+    return filename.split('__')[2]
     
 drugPattern = '([+-])drug'
 experimentTimePattern = 't=([0-9]*\.*[0-9])[a-zA-Z]*__' #gets the float part of the time in, e.g., 't=1.4d'
 experimentTimeUnitPattern = 't=[0-9]*\.*[0-9]([a-zA-Z]*)__' #gets the time unit part of, e.g. 't=1.4d' (would return 'd')
-cellTypePattern = '[0-9]*-[0-9]*__(.*)__[+-]'
+cellTypePattern = '[0-9]*-[0-9]*__(.*)__'
 dateTimeFormat = '%H:%M:%S  %d %b %Y' #format for recording the experiment time in the .#m4 files.
+wholeFilenamePattern = '(.*)'
