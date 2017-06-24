@@ -243,7 +243,19 @@ class batchExperiment(object):
             plt.title(experiment.fileTitle)
         
         plt.tight_layout()
+        
+    def histogramOverlay(self,dataType='diameter',nbins=50,**kwargs):
+        '''Plot all histograms all on one set of axes.'''
+        alpha = 0.92**len(self)
+
+        for i, experiment in enumerate(self):
+            freq,bins = np.histogram(experiment.pulsesDataFrame[dataType],bins=nbins)
+            plt.fill_between(bins[0:-1],freq,alpha=alpha,label=experiment.title,**kwargs)
+        plt.legend(loc=0)
+
+        
     def countCells(self,**kwargs):
+        '''calls countCells() method for all the experiments in this batch.'''
         for exp in self:
             exp.countCells(**kwargs)
         
