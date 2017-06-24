@@ -17,12 +17,18 @@ def volumeToDiameter(V):
 
 
 class coulterExperiment(object):
-    def __init__(self,filename,dilution=100.0,**kwargs):
+    def __init__(self,filename,dilution=100.0,title=None,**kwargs):
         '''Initializes an experiment object from the filename (with path) -- reads in data from file into usuable format, creates relevant dictionaries and dataframes with the data, and applies countCells function to count the number and size of cells within a certain size range. kwargs get passed to countCells method.'''
         self.filename = filename
         self.filenameWithoutPath = os.path.split(self.filename)[1]
         self.fileTitle = self.filenameWithoutPath[0:-4]
         self.dilution=dilution #setting this upfront, since there's no reason for it to change
+        
+        if title is None:
+            self.title = self.filenameWithoutPath
+        else:
+            self.title = title
+            
         
         #open file, get data as a string
         with open(filename) as file:
@@ -152,10 +158,10 @@ class coulterExperiment(object):
         
         self.summaryData.loc[self.filename,['cellCount','meanDiameter','meanVolume','medianDiameter','medianVolume','totalCellVolume']] = self.cellCount, self.meanDiameter, self.meanVolume, self.medianDiameter, self.medianVolume, self.totalCellVolume
     
-    def histogram(self,dataType='diameter',bins=50,**kwargs):
+    def histogram(self,dataType='diameter',nbins=50,**kwargs):
         '''Plots a histogram of the dataType column in pulsesDataFrame. kwargs get fed into plot; bins goes into np.histogram'''
         #constructing and plotting the histogram
-        freq,bins = np.histogram(self.pulsesDataFrame[dataType],bins=bins)
+        freq,bins = np.histogram(self.pulsesDataFrame[dataType],bins=nbins)
         plt.fill_between(bins[0:-1],freq,alpha=0.4,**kwargs)
         
         #drawing vertical lines where the cell bounds are
