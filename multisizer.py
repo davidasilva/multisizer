@@ -243,12 +243,12 @@ class batchExperiment(object):
         '''Creates an array of subplots of histograms for each experiment.'''
         nExps = len(self)
         
-
+      
         nRows = int(np.floor(np.sqrt(nExps)))
         nColumns = nExps / nRows
         if nRows * nColumns < nExps: nColumns += 1
 
-            
+    
         for i, experiment in enumerate(self):
             
             rowindex = (i)/nColumns
@@ -271,6 +271,23 @@ class batchExperiment(object):
             plt.subplot(nRows,nColumns,i+1,sharex=xShareAxis,sharey=yShareAxis)
             experiment.histogram(**kwargs)
             plt.title(experiment.fileTitle)
+        
+        
+        #forcing all the axes to have the same limits
+        axes = plt.gcf().get_axes()
+        xmax = max([ax.get_xlim()[1] for ax in axes])
+        xmin = min([ax.get_xlim()[0] for ax in axes])
+
+        ymax = max([ax.get_ylim()[1] for ax in axes])
+        ymin = 0
+
+        for ax in axes:
+            ax.set_xlim(xmin,xmax)
+            ax.set_ylim(ymin,ymax)
+
+
+        
+        
         
         plt.tight_layout()
         
