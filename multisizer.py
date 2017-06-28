@@ -4,6 +4,7 @@ import pandas as pd
 import re
 import os
 from datetime import datetime
+import sys
 
 #defining constants
 countspervolt = 1/(4*298.02e-9)
@@ -61,55 +62,58 @@ class coulterExperiment(object):
                 pass
 
         #format the hex data into usable numbers    
-        hex5Lists = [map(lambda x: int(x,16),subarray.split(',')) for subarray in dataDict['#Pulses5hex']]#converting from hexadecimal
-        pulsesDataFrame = pd.DataFrame(hex5Lists,columns=('MaxHeight','MidHeight','Width','Area','Gain')) #convert from list of lists to useable dataframe with labeled columns
-        self.pulsesDataFrame = pulsesDataFrame
-        
-        #convert parameter data into usable dictionaries
-        for section in dataSections:
-            sectionDict = {}
-            for line in dataDict[section]: #going through all the data in this section, seeing if it fits the 'field=value' format
+        try:
+            hex5Lists = [map(lambda x: int(x,16),subarray.split(',')) for subarray in dataDict['#Pulses5hex']]#converting from hexadecimal
+            pulsesDataFrame = pd.DataFrame(hex5Lists,columns=('MaxHeight','MidHeight','Width','Area','Gain')) #convert from list of lists to useable dataframe with labeled columns
+            self.pulsesDataFrame = pulsesDataFrame
 
-                try:
-                    field,value = re.search('(.*)=(.*)',line).group(1,2) #looking for data of the form 'field=value'
-                    sectionDict[field] = value #putting that data in the the section dictionary 
-                    sectionDict[field] = float(value) #converting to float, if possible
-                    sectionDict[field] = int(value) #converting to int, if possible
-                except:
+            #convert parameter data into usable dictionaries
+            for section in dataSections:
+                sectionDict = {}
+                for line in dataDict[section]: #going through all the data in this section, seeing if it fits the 'field=value' format
+
+                    try:
+                        field,value = re.search('(.*)=(.*)',line).group(1,2) #looking for data of the form 'field=value'
+                        sectionDict[field] = value #putting that data in the the section dictionary 
+                        sectionDict[field] = float(value) #converting to float, if possible
+                        sectionDict[field] = int(value) #converting to int, if possible
+                    except:
+                        pass
+
+                #replace the data in dataDict with the sectionDict, if it's of the proper format
+                if len(sectionDict.keys()) > 0:
+                    dataDict[section] = sectionDict
+                else:
                     pass
-                
-            #replace the data in dataDict with the sectionDict, if it's of the proper format
-            if len(sectionDict.keys()) > 0:
-                dataDict[section] = sectionDict
-            else:
-                pass
-        
-        #put particular data of interest into object attributes for ease of reference
-        self.instrumentData = dataDict['instrument']
-        self.gain = self.instrumentData['Gain']
-        self.current = self.instrumentData['Current']/1000.0 #converting to mA
-        self.Kd = self.instrumentData['Kd']
-        self.maxHeightCorr = self.instrumentData['MaxHtCorr']
-        
-        #calculating diameter from pulse data and other things
-        self.pulsesDataFrame['height'] = self.pulsesDataFrame['MaxHeight'] + self.maxHeightCorr #correcting height
-        self.pulsesDataFrame['diameter'] = self.Kd * np.cbrt((self.pulsesDataFrame.height) / (countspervolt * 25.0 * self.current * self.gain))
-        self.pulsesDataFrame['volume'] = (4.0/3.0) * np.pi * (self.pulsesDataFrame['diameter']/2.0)**3.0
-        
-        
-        self.dataDict = dataDict
-        
-        #extracting time data
-        self.datetimeString = re.search(' [0-9]*  (.*)',dataDict['Save0']['Time']).group(1)
-        self.datetimeObject = datetime.strptime(self.datetimeString,'%H:%M:%S  %d %b %Y')
+
+            #put particular data of interest into object attributes for ease of reference
+            self.instrumentData = dataDict['instrument']
+            self.gain = self.instrumentData['Gain']
+            self.current = self.instrumentData['Current']/1000.0 #converting to mA
+            self.Kd = self.instrumentData['Kd']
+            self.maxHeightCorr = self.instrumentData['MaxHtCorr']
+
+            #calculating diameter from pulse data and other things
+            self.pulsesDataFrame['height'] = self.pulsesDataFrame['MaxHeight'] + self.maxHeightCorr #correcting height
+            self.pulsesDataFrame['diameter'] = self.Kd * np.cbrt((self.pulsesDataFrame.height) / (countspervolt * 25.0 * self.current * self.gain))
+            self.pulsesDataFrame['volume'] = (4.0/3.0) * np.pi * (self.pulsesDataFrame['diameter']/2.0)**3.0
 
 
-        
-        #calculating with default
-        self.summaryData = pd.DataFrame(columns=('datetime','cellCount','meanDiameter','meanVolume','medianDiameter','medianVolume','totalCellVolume'))
-        self.summaryData.loc[self.filename,'datetime'] = self.datetimeObject
-        self.countCells(**kwargs)
-    
+            self.dataDict = dataDict
+
+            #extracting time data
+            self.datetimeString = re.search(' [0-9]*  (.*)',dataDict['Save0']['Time']).group(1)
+            self.datetimeObject = datetime.strptime(self.datetimeString,'%H:%M:%S  %d %b %Y')
+
+
+
+            #calculating with default
+            self.summaryData = pd.DataFrame(columns=('datetime','cellCount','meanDiameter','meanVolume','medianDiameter','medianVolume','totalCellVolume'))
+            self.summaryData.loc[self.filename,'datetime'] = self.datetimeObject
+            self.countCells(**kwargs)
+            
+        except:
+            print sys.exc_info()
     
     def countCells(self, boundType='diameter',minDiameter = 9.0, maxDiameter = 25.0, minVolume = diameterToVolume(9.0), maxVolume = diameterToVolume(25.0),**kwargs):
         '''sets the upper and lower size limit for what is considered a cell, and calculates the cell concentration in k/mL in that sample (subject to a dilution factor based on how the sample is prepared -- default is 100, since we usually put 100uL of cells into 10mL of solution for measurement.
@@ -201,6 +205,13 @@ class batchExperiment(object):
         #figure out what the source type is
         if type(source) == str:#the source is a string for a folder path
             filenameList = [os.path.join(source,filename) for filename in os.listdir(source) if filename[-4:].lower() == '.#m4'] #getting all the .#m4 files in the folder
+            self.experimentList = [] #initializing experiment list
+            for source_object in filenameList:
+                try:
+                    self.experimentList.append(coulterExperiment(source_object,**kwargs))
+                except:
+                    print "ERROR loading ", source_object 
+                    print sys.exc_info()
             self.experimentList = [coulterExperiment(source_object,**kwargs) for source_object in filenameList]
         else:#must be some sort of iterable
             assert hasattr(source,'__iter__'), 'Invalid source type. Source must be either a file path or a list (or similar).'
@@ -228,17 +239,36 @@ class batchExperiment(object):
             
         self.updateSummaryData()
         
-    def histogramArray(self,subplotShape=None,**kwargs):
+    def histogramArray(self,**kwargs):
         '''Creates an array of subplots of histograms for each experiment.'''
         nExps = len(self)
         
-        if subplotShape is None:
-            nRows = np.floor(np.sqrt(nExps))
-            nColumns = nExps / nRows
+
+        nRows = int(np.floor(np.sqrt(nExps)))
+        nColumns = nExps / nRows
+        if nRows * nColumns < nExps: nColumns += 1
+
             
-        fig = plt.figure(figsize=(12,8))
         for i, experiment in enumerate(self):
-            plt.subplot(nRows,nColumns,i+1)
+            
+            rowindex = (i)/nColumns
+            colindex = (i) % nColumns
+
+            #figuring out which other subplot this one should share its axes with
+            axes = plt.gcf().get_axes()
+
+            if colindex == 0:
+                yShareAxis = None
+
+            else:
+                yShareAxis = axes[rowindex*nColumns]
+
+            if rowindex == 0:
+                xShareAxis = None
+            else:
+                 xShareAxis = axes[colindex]
+            
+            plt.subplot(nRows,nColumns,i+1,sharex=xShareAxis,sharey=yShareAxis)
             experiment.histogram(**kwargs)
             plt.title(experiment.fileTitle)
         
