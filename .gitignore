@@ -49,4 +49,4 @@ Temporary Items
 #others
 .ipynb_checkpoints
 *.pyc
-*.ipynb
+test.ipynb
