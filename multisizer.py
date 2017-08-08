@@ -33,7 +33,7 @@ class coulterExperiment(object):
         
         #open file, get data as a string
         with open(filename) as file:
-            datastring = file.read()
+            datastring = file.read().replace('\r','')
             self.datastring = datastring
         
         linesList = datastring.split('\n')#break up data into an array with each line being an element of an array
@@ -102,8 +102,12 @@ class coulterExperiment(object):
             self.dataDict = dataDict
 
             #extracting time data
-            self.datetimeString = re.search(' [0-9]*  (.*)',dataDict['Save0']['Time']).group(1)
-            self.datetimeObject = datetime.strptime(self.datetimeString,'%H:%M:%S  %d %b %Y')
+            self.datetimeString = re.search(' [0-9]*  (.*)',dataDict['Save0']['Time']).group(1).lstrip()
+            try:
+                self.datetimeObject = datetime.strptime(self.datetimeString,'%H:%M:%S  %d %b %Y')
+            except:
+                self.datetimeObject = None
+                print self.datetimeString
 
 
 
@@ -216,7 +220,7 @@ class batchExperiment(object):
         else:#must be some sort of iterable
             assert hasattr(source,'__iter__'), 'Invalid source type. Source must be either a file path or a list (or similar).'
             if all([object_type == str for object_type in map(type,source)]):#if every item in the source array is a string:
-                   self.experimentList = [coulterExperiment(filename,**kwargse) for filename in source]; #creating coulterExperiment from every file in list
+                   self.experimentList = [coulterExperiment(filename,**kwargs) for filename in source]; #creating coulterExperiment from every file in list
                                           
             elif all([isinstance(source_object,coulterExperiment) for source_object in source]):#if every object is a coulterExperiment object
                    self.experimentList = list(source); #forcing into a list
