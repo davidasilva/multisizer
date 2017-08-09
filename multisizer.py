@@ -176,13 +176,14 @@ class coulterExperiment(object):
         plt.axvline(x=self.lowerBound,linestyle=':')
         plt.axvline(x=self.upperBound,linestyle=':')
         
+        #setting the xlims appropriately
+        plt.xlim(bins[0],max(bins[-1],self.upperBound*1.05)); #lower bound is the lowest size detected; upper bound is either the biggest sized cell detected or the upperBound we've chosen for the cellular size range -- whichever is bigger
+        
         #setting ymin to be 0
         ax=plt.gca() #getting axis
         ymin,ymax = ax.get_ylim() #finding current ymax, so we can keep that
-        ax.set_ylim(0,ymax) #setting ymin to be 0, keeping old ymax
+        plt.ylim(0,ymax) #setting ymin to be 0, keeping old ymax
         
-        #setting the xlims appropriately
-        plt.xlim(bins[0],max(bins[-1],self.upperBound*1.05)); #lower bound is the lowest size detected; upper bound is either the biggest sized cell detected or the upperBound we've chosen for the cellular size range -- whichever is bigger
         
     def regExColumn(self,pattern,columnName,functionToApply=None):
         '''Creates a new column in summaryData based on the results of a regular expression search of pattern, and names that column columnName.'''
