@@ -9,6 +9,14 @@ import sys
 #defining constants
 countspervolt = 1/(4*298.02e-9)
 
+plotInfo = {
+    'diameter':{
+        'xlabel': 'Diameter ($\mu$m)'},
+    'volume': {
+        'xlabel': 'Volume (fL)'}
+    }
+
+
 def diameterToVolume(D):
     '''converts diameter to volume'''
     return (4.0/3.0) * np.pi *(D/2.0) **3.0
@@ -169,6 +177,9 @@ class coulterExperiment(object):
     def histogram(self,dataType='diameter',nbins=50,**kwargs):
         '''Plots a histogram of the dataType column in pulsesDataFrame. kwargs get fed into plot; bins goes into np.histogram'''
         #constructing and plotting the histogram
+        
+        assert dataType in plotInfo.keys()
+        
         freq,bins = np.histogram(self.pulsesDataFrame[dataType],bins=nbins)
         plt.fill_between(bins[0:-1],freq,alpha=0.4,**kwargs)
         
@@ -184,6 +195,9 @@ class coulterExperiment(object):
         ymin,ymax = ax.get_ylim() #finding current ymax, so we can keep that
         plt.ylim(0,ymax) #setting ymin to be 0, keeping old ymax
         
+        #labeling
+        plt.ylabel('Count')
+        plt.xlabel(plotInfo[dataType]['xlabel'])
         
     def regExColumn(self,pattern,columnName,functionToApply=None):
         '''Creates a new column in summaryData based on the results of a regular expression search of pattern, and names that column columnName.'''
