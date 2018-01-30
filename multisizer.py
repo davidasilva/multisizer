@@ -16,7 +16,6 @@ plotInfo = {
         'xlabel': 'Volume (fL)'}
     }
 
-
 def diameterToVolume(D):
     '''converts diameter to volume'''
     return (4.0/3.0) * np.pi *(D/2.0) **3.0
@@ -173,6 +172,10 @@ class coulterExperiment(object):
         self.totalCellVolume = sum(self.cellData.volume) * self.dilution / (1.0e9) #total volume of cells per mL, in microliters
         
         self.summaryData.loc[self.filename,['cellCount','meanDiameter','meanVolume','medianDiameter','medianVolume','totalCellVolume']] = self.cellCount, self.meanDiameter, self.meanVolume, self.medianDiameter, self.medianVolume, self.totalCellVolume
+        
+        #setting datatype on float columns
+        float_columns = ['cellCount','meanDiameter','meanVolume','medianDiameter','medianVolume','totalCellVolume']
+        self.summaryData[float_columns] = self.summaryData[float_columns].astype(np.float)
     
     def histogram(self,dataType='diameter',nbins=50,**kwargs):
         '''Plots a histogram of the dataType column in pulsesDataFrame. kwargs get fed into plot; bins goes into np.histogram'''
@@ -253,6 +256,10 @@ class batchExperiment(object):
         
     def updateSummaryData(self):
         self.summaryData = pd.concat([experiment.summaryData for experiment in self.experimentList]);
+        
+        #setting datatype on float columns
+        float_columns = ['cellCount','meanDiameter','meanVolume','medianDiameter','medianVolume','totalCellVolume']
+        self.summaryData[float_columns] = self.summaryData[float_columns].astype(np.float)
         
         
     def regExColumn(self,pattern,columnName,**kwargs):
